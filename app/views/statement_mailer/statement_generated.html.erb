@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+  </head>
+
+  <body>
+    <p>Dear Customer,</p>
+
+    <p>
+      Your account statement has been successfully generated.
+    </p>
+
+    <p>
+      <strong>Statement Details:</strong><br>
+      Account Number: <%= @statement.account_number %><br>
+      Period: <%= @statement.from_date %> to <%= @statement.to_date %>
+    </p>
+
+    <p>
+      You can download your statement using the link below:
+    </p>
+
+    <p>
+      <a href="<%= @statement.file_path %>">
+        Download Statement (PDF)
+      </a>
+    </p>
+
+    <p>
+      <strong>PDF Password:</strong><br>
+      Your statement PDF is password protected.
+      The password is created using:
+    </p>
+
+    <ul>
+      <li>Last <strong>4 digits</strong> of your account number</li>
+      <li>First <strong>4 characters</strong> of your email address (before <code>@</code>)</li>
+    </ul>
+
+    <p>
+      <strong>Example:</strong><br>
+      Account Number: <code>6500000001</code><br>
+      Email Address: <code>dorji@gmail.com</code><br>
+      PDF Password: <code>0001dorj</code>
+    </p>
+
+    <p>
+      If you did not request this statement, please contact our support team immediately.
+    </p>
+
+    <p>
+      Regards,<br>
+      <strong>BNB Support Team</strong>
+    </p>
+  </body>
+</html>

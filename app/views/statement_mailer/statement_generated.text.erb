@@ -1,0 +1,12 @@
+Dear Customer,
+
+Your account statement has been successfully generated.
+
+Account Number: <%= @statement.account_number %>
+Period: <%= @statement.from_date %> to <%= @statement.to_date %>
+
+Download your statement:
+<%= @statement.file_path %>
+
+Regards,
+BNB Support Team

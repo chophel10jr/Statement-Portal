@@ -1,0 +1,71 @@
+<%= render 'layouts/header' %>
+
+<div class="h-auto lg:flex justify-center">
+  <div class="lg:w-[600px] lg:px-[32px] py-[16px] px-[16px] bg-white lg:bg-[unset]">
+    <div class="text-center lg:mb-6 pb-[16px] border-b border-[rgba(0,0,0,0.1)]">
+      <h1 class="text-2xl lg:text-3xl font-bold text-bnb_blue leading-tight">
+        Statement Generation Portal
+      </h1>
+    </div>
+    <div class="rounded-[22px] bg-white lg:bg-[#F6F6F6]">
+      <div class="lg:flex" data-controller="statement">
+        <div class="flex-1 px-[16px] py-[16px] lg:py-[32px] lg:px-[32px] overflow-y-auto">
+          <%= form_with url: statement_index_path, method: :post, local: true do |f| %>
+            <div>
+              <p class="mb-[8px]">Account Number <span class="text-bnb_red">*</span> </p>
+              <div class="form-group mb-[24px]">
+                <%= f.text_field :account_number,
+                  { class: "form-input",
+                    data: { statement_target: "accountNumber", action: "input->statement#validateAccountNumber" } } %>
+                <span class="error-message" data-statement-target="accountNumberError" style="color: red;"></span>
+              </div>
+            </div>
+
+            <div>
+              <p class="mb-[8px]">From Date <span class="text-bnb_red">*</span> </p>
+              <div class="form-group mb-[24px]">
+                <%= f.date_field :from_date,
+                  { class: "form-date",
+                    data: { statement_target: "fromDate", action: "input->statement#validateFromAndToDate" } } %>
+              </div>
+            </div>
+
+            <div>
+              <p class="mb-[8px]">To Date <span class="text-bnb_red">*</span> </p>
+              <div class="form-group mb-[24px]">
+                <%= f.date_field :to_date,
+                  { class: "form-date",
+                    data: { statement_target: "toDate", action: "input->statement#validateFromAndToDate" } } %>
+
+                <div class="relative inline-block mt-[4px]" data-statement-target="toDateError">
+                  <span class="error-message" style="color: red;">Invalid Date
+                  <span 
+                    class="cursor-pointer bg-[#252D60] text-white font-bold rounded-full px-[9px] py-[3px] text-sm"
+                    data-action="mouseenter->statement#showTooltip mouseleave->statement#hideTooltip">?
+                  </span></span>
+
+                  <div 
+                    data-statement-target="tooltip"
+                    class="hidden absolute top-1/2 left-full ml-2 -translate-y-1/2 bg-[#252D60] text-white text-xs rounded-lg px-2 py-1 shadow-lg w-48 z-10">
+                    Please ensure the From Date is not after the To Date, both dates are not in the future, and the duration is within one years.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex space-x-[16px] justify-end mt-[28px]">
+              <button
+                data-statement-target="submitButton"
+                class="btn-blue-bnb flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                type="submit"
+                disabled>
+                <i class="material-symbols-outlined !text-[20px] text-white mr-[8px] ml-[2px]">receipt_long</i>
+                Submit
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

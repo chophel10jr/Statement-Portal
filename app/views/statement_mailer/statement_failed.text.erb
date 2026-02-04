@@ -1,0 +1,17 @@
+Dear Customer,
+
+We regret to inform you that your account statement could not be generated.
+
+Account Number: <%= @statement.account_number %>
+Period: <%= @statement.from_date %> to <%= @statement.to_date %>
+
+<% if @error.present? %>
+Reason:
+<%= @error %>
+<% end %>
+
+Please try again later. If the issue persists, contact support and quote
+Statement Reference ID: <%= @statement.id %>.
+
+Regards,
+BNB Support Team

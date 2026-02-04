@@ -1,0 +1,10 @@
+<% if flash[:notice] || flash[:alert] %>
+  <div 
+    data-controller="flash-notice" 
+    data-flash-notice-target="notice" 
+    class="notification show px-[12px] py-[20px] lg:rounded-[6px] fixed top-0 
+           text-white z-10 w-full lg:w-[500px] left-0 lg:left-[calc(50%-250px)] shadow
+           <%= flash[:notice] ? 'bg-success' : 'bg-bnb_red' %> transition-transform duration-300 ease-out">
+    <p><%= flash[:notice] || flash[:alert] %></p>
+  </div>
+<% end %>
