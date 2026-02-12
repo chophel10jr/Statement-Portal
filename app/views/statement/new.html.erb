@@ -10,7 +10,7 @@
     <div class="rounded-[22px] bg-white lg:bg-[#F6F6F6]">
       <div class="lg:flex" data-controller="statement">
         <div class="flex-1 px-[16px] py-[16px] lg:py-[32px] lg:px-[32px] overflow-y-auto">
-          <%= form_with url: statement_index_path, method: :post, local: true do |f| %>
+          <%= form_with model: Statement.new, url: statement_index_path, method: :post, local: true do |f| %>
             <div>
               <p class="mb-[8px]">Account Number <span class="text-bnb_red">*</span> </p>
               <div class="form-group mb-[24px]">

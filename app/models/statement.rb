@@ -29,6 +29,14 @@ class Statement < ApplicationRecord
   validate :prevent_pending_statement_overlap, on: :create
   validate :limit_one_request_per_day, on: :create
 
+    def verified?
+      verification&.verified?
+    end
+
+    def ready_for_generation?
+      pending? && verified?
+    end
+
   private
 
   def validate_date_range

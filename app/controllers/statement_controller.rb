@@ -14,8 +14,9 @@ class StatementController < ApplicationController
       redirect_to verify_otp_verification_index_path(id: verification.id),
                   notice: "OTP sent to your registered email/phone."
     else
-      flash[:alert] = @statement.errors.full_messages.to_sentence
-      render :new, status: :unprocessable_entity
+      render :new,
+             status: :unprocessable_entity,
+             alert: @statement.errors.full_messages.to_sentence
     end
   end
 
@@ -23,17 +24,17 @@ class StatementController < ApplicationController
 
   def statement_params
     params.require(:statement).permit(:account_number, :from_date, :to_date)
-  rescue ActionController::ParameterMissing
-    params.permit(:account_number, :from_date, :to_date)
   end
 
   def fetch_account_detail
-    acc_num = statement_params[:account_number]
-    return if acc_num.blank?
+    return if statement_params[:account_number].blank?
 
-    @account_detail = FetchAccountDetailService
-                        .new(account_number: acc_num)
-                        .run
+    @account_detail =
+      FetchAccountDetailService
+        .new(account_number: statement_params[:account_number])
+        .run
+  rescue ExternalServiceError => e
+    redirect_to root_path, alert: e.message
   end
 
   def ensure_account_exists
@@ -43,18 +44,16 @@ class StatementController < ApplicationController
   end
 
   def statement_attributes
-    {
-      account_number: statement_params[:account_number],
+    statement_params.merge(
       branch_code: @account_detail['BRANCH_CODE'],
       email: @account_detail['E_MAIL'],
-      phone_number: @account_detail['MOBILE'],
-      from_date: statement_params[:from_date],
-      to_date: statement_params[:to_date]
-    }
+      phone_number: @account_detail['MOBILE']
+    )
   end
 
   def create_verification(statement)
-    verification = @statement.create_verification
+    verification = statement.create_verification
     verification.generate_otp
+    verification
   end
 end

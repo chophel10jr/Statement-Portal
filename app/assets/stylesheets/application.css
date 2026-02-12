@@ -1,10 +1,201 @@
-/*
- * This is a manifest file that'll be compiled into application.css.
- *
- * With Propshaft, assets are served efficiently without preprocessing steps. You can still include
- * application-wide styles in this file, but keep in mind that CSS precedence will follow the standard
- * cascading order, meaning styles declared later in the document or manifest will override earlier ones,
- * depending on specificity.
- *
- * Consider organizing styles into separate files for maintainability.
- */
+h1, h2, h3, h4, h5, h6, .title {
+  font-family: 'Noto Serif', serif;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  /*background-color: #DDDDDD;*/
+  font-family: 'Noto Serif', serif;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root {
+  --bnb-blue: rgb(37, 45, 96);
+  --bnb-red: rgb(244, 0, 0);
+  --bnb-dark: rgb(24, 21, 43);
+}
+
+.qr-code-outline {
+  border: 3px solid #5AC994;
+  border-radius: 6px;
+  padding: 8px;
+  width: 260px !important;
+  height: 260px !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 30px 0 30px 0;
+}
+
+.btn-blue-bnb {
+  color: white !important;
+  font-weight: bold;
+  background-color: #252D60 !important;
+  border-radius: 6px !important;
+  padding: 12px 24px 12px 14px;
+}
+
+.btn-blue-bnb-outline {
+  color: var(--bnb-blue) !important;
+  font-weight: bold;
+  background-color: white !important;
+  border-radius: 6px !important;
+  padding: 12px 24px 12px 14px;
+  border: 2px solid var(--bnb-red);
+}
+
+.error-message {
+  font-size: 12px;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #F6F6F6 inset !important;
+  box-shadow: 0 0 0 1000px #F6F6F6 inset !important;
+  -webkit-text-fill-color: rgb(122, 122, 122) !important;
+  caret-color: inherit !important;
+}
+
+.form-input, .form-search,
+.form-select,
+.form-date {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db; /* gray-300 */
+  background-color: #F6F6F6;
+  color: #6b7280; /* gray-500 */
+  border-radius: 0.375rem; /* rounded-md */
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-search:focus,
+.form-date:focus {
+    border: 1px solid var(--bnb-blue);
+    box-shadow: 0 0 0 2px var(--bnb-blue); /* focus ring */
+}
+
+.form-input::placeholder,
+.form-select::placeholder,
+.form-date::placeholder {
+    color: transparent;
+}
+
+.form-label {
+  position: absolute;
+  top: 4px;
+  left: 16px;
+  padding-top: 4px;
+  padding-left: 4px;
+  pointer-events: none;
+  transition: transform 0.3s ease-in-out, font-size 0.3s ease-in-out, color 0.3s ease-in-out;
+  color: #6b7280; /* gray-500 */
+}
+
+.form-group {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.form-input:focus + .form-label,
+.form-input:not(:placeholder-shown) + .form-label {
+  transform: translateY(-16px);
+  font-size: 12px;
+  color: var(--bnb-blue);
+  background-color: #F6F6F6;
+}
+
+.disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+  background-color: #d1d5db; /* gray-300 */
+  color: #6b7280; /* gray-500 */
+  border-color: #9ca3af; /* gray-400 */
+}
+
+.text-bnb_red {
+  color: var(--bnb-red);
+}
+.border-2 {
+  border-width:2px;
+}
+.border-bnb_blue {
+  border-color: var(--bnb-blue);
+}
+.bg-bnb_blue {
+  background-color: var(--bnb-blue);
+}
+.text-bnb_blue {
+  color: var(--bnb-blue);
+}
+.bg-success {
+  background-color: #5CB85C;
+}
+.bg-bnb_red {
+  background-color: var(--bnb-red);
+}
+
+.bg-inprogress {
+  background-color: #007bff;
+}
+
+.notification {
+  transform: translateY(-100px);
+  opacity: 0;
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+.notification.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.chip-input:checked + .chip {
+  background-color: var(--bnb-blue);
+  color: white;
+}
+
+.readonly-field {
+  cursor: not-allowed;
+  opacity: 0.4;
+  background-color: #d1d5db;
+  color: #6b7280;
+  border-color: #9ca3af;
+}
+
+.profile-picture-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.profile-picture {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ccc;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.otp-input {
+  transition: all 0.2s ease;
+}
+
+.otp-input:focus {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 2px var(--bnb-blue); /* focus ring */
+}
+
+.otp-input:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+}

@@ -1,11 +1,21 @@
+# frozen_string_literal: true
+
 class FetchStatementService < ApplicationService
   attr_accessor :dcn
 
   def run
     connection = oracle_connection
     row = fetch_row(connection)
+
+    raise ExternalServiceError, "Statement not found for DCN #{dcn}" if row.nil?
+
     message_clob = row['MESSAGE']
-    statement_text = message_clob.read
+    raise ExternalServiceError, "Empty statement message for DCN #{dcn}" if message_clob.nil?
+
+    message_clob.read
+  rescue OCIError => e
+    Rails.logger.error("[FetchStatementService] Oracle error: #{e.message}")
+    raise ExternalServiceError, "Core database unavailable"
   ensure
     @cursor&.close
     connection&.logoff
@@ -13,7 +23,7 @@ class FetchStatementService < ApplicationService
 
   private
 
-  attr_reader :dcn, :cursor
+  attr_reader :cursor
 
   def oracle_connection
     @oracle_connection ||= OracleConnectionService.new(
@@ -26,11 +36,15 @@ class FetchStatementService < ApplicationService
   end
 
   def fetch_row(connection)
-    query = <<~SQL.strip
-      SELECT * FROM MSTB_DLY_MSG_OUT WHERE DCN = '#{dcn}'
+    query = <<~SQL
+      SELECT *
+      FROM MSTB_DLY_MSG_OUT
+      WHERE DCN = :dcn
     SQL
 
-    @cursor = connection.exec(query)
+    @cursor = connection.parse(query)
+    @cursor.bind_param(':dcn', dcn.to_s)
+    @cursor.exec
     @cursor.fetch_hash
   end
 end
