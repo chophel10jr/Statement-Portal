@@ -24,9 +24,9 @@ gem "jbuilder"
 gem "tzinfo-data", platforms: %i[ windows jruby ]
 
 # Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
-gem "solid_cache"
-gem "solid_queue"
-gem "solid_cable"
+# gem "solid_cache"
+# gem "solid_queue"
+# gem "solid_cable"
 
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
@@ -45,6 +45,9 @@ gem 'rqrcode'
 gem 'jwt'
 gem 'savon'
 gem 'prawn'
+gem 'ruby-oci8'
+gem 'activerecord-oracle_enhanced-adapter', '~> 8.0'
+gem 'csv'
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
@@ -56,10 +59,6 @@ group :development, :test do
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
   gem 'pry-rails'
-  # For Oracle connectivity
-  gem 'ruby-oci8'
-  gem 'activerecord-oracle_enhanced-adapter', '~> 8.0'
-  gem 'csv'
 end
 
 group :development do
