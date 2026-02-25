@@ -19,6 +19,22 @@ class StatementController < ApplicationController
     end
   end
 
+  def show
+    filename = params[:filename]
+    filename += ".#{params[:format]}" if params[:format].present?
+
+    file = Rails.root.join("storage", "statements", filename)
+
+    unless File.exist?(file)
+      render plain: "Statement no longer available", status: :gone
+      return
+    end
+
+    send_file file,
+              type: "application/pdf",
+              disposition: "inline"
+  end
+
   private
 
   def statement_params

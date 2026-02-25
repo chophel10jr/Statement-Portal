@@ -7,21 +7,26 @@ class GenerateStatementJob < ApplicationJob
   discard_on ActiveRecord::RecordNotFound
 
   def perform(statement_id)
-    @statement = Statement.find(statement_id)
-    return unless @statement.ready_for_generation?
+    statement = Statement.find(statement_id)
+    return unless statement.ready_for_generation?
 
-    core_result = fetch_statement_from_core
-    return fail_with(core_result[:error]) unless core_success?(core_result)
+    result = fetch_statement_from_core(statement)
+    unless core_success?(result)
+      return fail_with(statement, result[:error])
+    end
 
-    dcn = extract_dcn(core_result)
-    generate_and_finalize_statement(dcn)
+    dcn = extract_dcn(result)
+    pdf_path = generate_pdf(statement, dcn)
+
+    finalize_success!(statement, pdf_path, dcn)
+  rescue ExternalServiceError, IOError => e
+    log_error(statement_id, e)
+    fail_with(statement, e.message)
   end
 
   private
 
-  attr_reader :statement
-
-  def fetch_statement_from_core
+  def fetch_statement_from_core(statement)
     SoapClientService.new(
       account_number: statement.account_number,
       branch_code: statement.branch_code,
@@ -43,12 +48,12 @@ class GenerateStatementJob < ApplicationJob
     )
   end
 
-  def generate_and_finalize_statement(dcn)
+  def generate_pdf(statement, dcn)
     statement_text = FetchStatementService.new(dcn: dcn).run
 
-    pdf_path = GeneratePdfService.new(
+    GeneratePdfService.new(
       statement_text: statement_text,
-      pdf_password: pdf_password
+      pdf_password: pdf_password(statement)
     ).run
 
     finalize_success!(pdf_path, dcn)
@@ -57,7 +62,7 @@ class GenerateStatementJob < ApplicationJob
     fail_with(e.message)
   end
 
-  def finalize_success!(pdf_path, dcn)
+  def finalize_success!(statement, pdf_path, dcn)
     Statement.transaction do
       statement.update!(
         status: :generated,
@@ -67,23 +72,34 @@ class GenerateStatementJob < ApplicationJob
     end
 
     StatementMailer.statement_generated(statement).deliver_later
+
+    DeleteStatementPdfJob
+      .set(wait: 5.days)
+      .perform_later(pdf_path)
   end
 
-  def fail_with(error)
+  def fail_with(statement, error)
+    Rails.logger.warn(
+      "[GenerateStatementJob] Statement##{statement.id} failed: #{error}"
+    )
+
     statement.update!(status: :failed)
-    StatementMailer.statement_failed(statement, error).deliver_later
+
+    StatementMailer
+      .statement_failed(statement, error)
+      .deliver_later
   end
 
-  def pdf_password
+  def pdf_password(statement)
     account_part = statement.account_number.to_s.last(4)
-    email_part = statement.email.to_s.split("@").first.to_s[0, 4].ljust(4, "x")
+    email_part = statement.email.to_s.split("@").first.to_s.first(4).ljust(4, "x")
 
     "#{account_part}#{email_part}"
   end
 
-  def log_error(error)
+  def log_error(statement_id, error)
     Rails.logger.error(
-      "[GenerateStatementJob] Statement##{statement.id}: #{error.message}"
+      "[GenerateStatementJob] Statement##{statement_id}: #{error.class} - #{error.message}"
     )
   end
 end
