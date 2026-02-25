@@ -50,7 +50,6 @@ class GenerateStatementJob < ApplicationJob
       statement_text: statement_text,
       pdf_password: pdf_password
     ).run
-    binding.pry
 
     finalize_success!(pdf_path, dcn)
   rescue ExternalServiceError, IOError => e

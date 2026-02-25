@@ -14,9 +14,8 @@ class StatementController < ApplicationController
       redirect_to verify_otp_verification_index_path(id: verification.id),
                   notice: "OTP sent to your registered email/phone."
     else
-      render :new,
-             status: :unprocessable_entity,
-             alert: @statement.errors.full_messages.to_sentence
+      flash.now[:alert] = @statement.errors.full_messages.to_sentence
+      render :new, status: :unprocessable_content
     end
   end
 

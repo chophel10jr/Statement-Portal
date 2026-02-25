@@ -138,7 +138,7 @@ class GeneratePdfService < ApplicationService
     encrypted = path.sub(/\.pdf\z/, "_secure.pdf")
 
     success = system(
-      "qpdf",
+      "/usr/bin/qpdf",
       "--encrypt", password, password, "256",
       "--",
       path,

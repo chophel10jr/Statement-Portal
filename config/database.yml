@@ -18,3 +18,7 @@ test:
 production:
   <<: *default
   database: statement_portal_production
+
+queue:
+  <<: *default
+  database: statement_portal_production
