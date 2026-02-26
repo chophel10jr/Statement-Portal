@@ -1,12 +1,15 @@
 Dear Customer,
 
-Your account statement has been successfully generated.
+Your bank statement for <%= @statement.from_date %> to <%= @statement.to_date %>
+for account <%= @statement.account_number %> has been generated successfully.
 
-Account Number: <%= @statement.account_number %>
-Period: <%= @statement.from_date %> to <%= @statement.to_date %>
+Download Statement (PDF):
+<%= @statement_url %>
 
-Download your statement:
-<%= @statement.file_path %>
+PDF Password:
+Last 4 digits of the account number + first 4 characters of your email ID
+(e.g. Account: 6500000001, Email: dorji@gmail.com → 0001dorj)
 
-Regards,
-BNB Support Team
+If you did not request this statement, please contact our support team (6070).
+
+Regards

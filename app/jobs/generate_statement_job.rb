@@ -55,11 +55,6 @@ class GenerateStatementJob < ApplicationJob
       statement_text: statement_text,
       pdf_password: pdf_password(statement)
     ).run
-
-    finalize_success!(pdf_path, dcn)
-  rescue ExternalServiceError, IOError => e
-    log_error(e)
-    fail_with(e.message)
   end
 
   def finalize_success!(statement, pdf_path, dcn)
@@ -80,7 +75,7 @@ class GenerateStatementJob < ApplicationJob
 
   def fail_with(statement, error)
     Rails.logger.warn(
-      "[GenerateStatementJob] Statement##{statement.id} failed: #{error}"
+      "[GenerateStatementJob] statement_id=#{statement.id} failed: #{error}"
     )
 
     statement.update!(status: :failed)
@@ -99,7 +94,7 @@ class GenerateStatementJob < ApplicationJob
 
   def log_error(statement_id, error)
     Rails.logger.error(
-      "[GenerateStatementJob] Statement##{statement_id}: #{error.class} - #{error.message}"
+      "[GenerateStatementJob] statement_id=#{statement_id} error=#{error.message}"
     )
   end
 end

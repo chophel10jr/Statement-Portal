@@ -8,39 +8,24 @@
     <p>Dear Customer,</p>
 
     <p>
-      We regret to inform you that your account statement could not be generated at this time.
-    </p>
-
-    <p>
-      <strong>Statement Details:</strong><br>
-      Account Number: <%= @statement.account_number %><br>
-      Period: <%= @statement.from_date %> to <%= @statement.to_date %>
+      We were unable to generate your account statement for
+      <strong><%= @statement.from_date %> to <%= @statement.to_date %></strong>
+      for account <strong><%= @statement.account_number %></strong>.
     </p>
 
     <% if @error.present? %>
       <p>
-        <strong>Reason:</strong><br>
-        <%= @error %>
+        <strong>Reason:</strong> <%= @error %>
       </p>
     <% end %>
 
     <p>
-      This may be due to a temporary system issue or incomplete information.
-      Please try again later.
+      Please try again later. If the issue persists, contact our support team (6070)
+      and quote reference ID <strong><%= @statement.id %></strong>.
     </p>
 
     <p>
-      If the problem persists, kindly contact our support team and quote your
-      <strong>Statement Reference ID:</strong> <%= @statement.id %>.
-    </p>
-
-    <p>
-      We apologize for the inconvenience caused.
-    </p>
-
-    <p>
-      Regards,<br>
-      <strong>BNB Support Team</strong>
+      Regards
     </p>
   </body>
 </html>
