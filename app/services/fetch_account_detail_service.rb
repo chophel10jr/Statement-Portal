@@ -5,11 +5,15 @@ class FetchAccountDetailService < ApplicationService
 
   def run
     connection = connect_to_oracle
+    cursor     = connection.parse(query)
 
-    cursor = connection.exec(query, account_number)
-    cursor.fetch_hash || {}
+    cursor.bind_param(':account_number', account_number.to_s)
+    cursor.exec
+    cursor.fetch_hash
   rescue StandardError => e
-    Rails.logger.error("FetchAccountDetailService failed: #{e.message}")
+    Rails.logger.error(
+      "[FetchAccountDetailService] account_number=#{account_number} error=#{e.class}: #{e.message}"
+    )
     raise ExternalServiceError, "Unable to fetch account details"
   ensure
     cursor&.close
@@ -17,8 +21,6 @@ class FetchAccountDetailService < ApplicationService
   end
 
   private
-
-  attr_reader :account_number
 
   def query
     <<~SQL
@@ -30,11 +32,11 @@ class FetchAccountDetailService < ApplicationService
 
   def connect_to_oracle
     OracleConnectionService.new(
-      db_user: ENV.fetch('DB_USER'),
-      db_password: ENV.fetch('DB_PASSWORD'),
-      db_host: ENV.fetch('DB_HOST'),
-      db_port: ENV.fetch('DB_PORT'),
-      db_service_name: ENV.fetch('DB_SERVICE_NAME')
+      db_user: ENV.fetch("DB_USER"),
+      db_password: ENV.fetch("DB_PASSWORD"),
+      db_host: ENV.fetch("DB_HOST"),
+      db_port: ENV.fetch("DB_PORT"),
+      db_service_name: ENV.fetch("DB_SERVICE_NAME")
     ).run
   end
 end

@@ -1,38 +1,34 @@
 # frozen_string_literal: true
 
 class StatementController < ApplicationController
-  before_action :fetch_account_detail, only: :create
-  before_action :ensure_account_exists, only: :create
-
   def new; end
 
   def create
-    @statement = Statement.new(statement_attributes)
+    statement = CreateStatementService
+                  .new(statement_params: statement_params)
+                  .run
 
-    if @statement.save
-      verification = create_verification(@statement)
-      redirect_to verify_otp_verification_index_path(id: verification.id),
-                  notice: "OTP sent to your registered email/phone."
-    else
-      flash.now[:alert] = @statement.errors.full_messages.to_sentence
-      render :new, status: :unprocessable_content
-    end
+    redirect_to(
+      verify_otp_verification_index_path(id: statement.verification.id),
+      notice: "OTP sent to your registered email/phone."
+    )
+
+  rescue ActiveRecord::RecordInvalid => e
+    flash.now[:alert] = e.record.errors.full_messages.to_sentence
+    render :new, status: :unprocessable_entity
+
+  rescue ExternalServiceError, ArgumentError => e
+    redirect_to root_path, alert: e.message
   end
 
   def show
-    filename = params[:filename]
-    filename += ".#{params[:format]}" if params[:format].present?
-
-    file = Rails.root.join("storage", "statements", filename)
+    file = statement_file(params[:filename], params[:format])
 
     unless File.exist?(file)
-      render plain: "Statement no longer available", status: :gone
-      return
+      return render plain: "Statement no longer available", status: :gone
     end
 
-    send_file file,
-              type: "application/pdf",
-              disposition: "inline"
+    send_file file, type: "application/pdf", disposition: "inline"
   end
 
   private
@@ -41,34 +37,10 @@ class StatementController < ApplicationController
     params.require(:statement).permit(:account_number, :from_date, :to_date)
   end
 
-  def fetch_account_detail
-    return if statement_params[:account_number].blank?
+  def statement_file(filename, format)
+    safe_name = File.basename(filename.to_s)
+    safe_name += ".#{format}" if format.present?
 
-    @account_detail =
-      FetchAccountDetailService
-        .new(account_number: statement_params[:account_number])
-        .run
-  rescue ExternalServiceError => e
-    redirect_to root_path, alert: e.message
-  end
-
-  def ensure_account_exists
-    return if @account_detail.present?
-
-    redirect_to root_path, alert: "You don't have an account with BNB."
-  end
-
-  def statement_attributes
-    statement_params.merge(
-      branch_code: @account_detail['BRANCH_CODE'],
-      email: @account_detail['E_MAIL'],
-      phone_number: @account_detail['MOBILE']
-    )
-  end
-
-  def create_verification(statement)
-    verification = statement.create_verification
-    verification.generate_otp
-    verification
+    Rails.root.join("storage", "statements", safe_name)
   end
 end
