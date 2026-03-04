@@ -5,7 +5,7 @@ export const validStartAndEndDate = (startDate, endDate) => {
 
   if (isNaN(start) || isNaN(end)) return false;
 
-  if (end <= start) return false;
+  if (end < start) return false;
 
   if (start > today || end > today) return false;
 

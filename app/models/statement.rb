@@ -54,7 +54,7 @@ class Statement < ApplicationRecord
 
     today = Date.current
 
-    errors.add(:to_date, "must be after the start date") if to_date <= from_date
+    errors.add(:to_date, "must be after the start date") if to_date < from_date
     errors.add(:from_date, "cannot be in the future") if from_date > today
     errors.add(:to_date, "cannot be in the future") if to_date > today
     errors.add(:to_date, "range cannot exceed 1 years") if to_date > from_date + 1.years
