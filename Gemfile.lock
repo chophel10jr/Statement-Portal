@@ -245,7 +245,7 @@ GEM
     parser (3.3.9.0)
       ast (~> 2.4.1)
       racc
-    pdf-core (0.9.0)
+    pdf-core (0.10.0)
     pg (1.6.2)
     pg (1.6.2-aarch64-linux)
     pg (1.6.2-aarch64-linux-musl)
@@ -253,9 +253,10 @@ GEM
     pg (1.6.2-x86_64-linux-musl)
     pp (0.6.2)
       prettyprint
-    prawn (2.4.0)
-      pdf-core (~> 0.9.0)
-      ttfunk (~> 1.7)
+    prawn (2.5.0)
+      matrix (~> 0.4)
+      pdf-core (~> 0.10.0)
+      ttfunk (~> 1.8)
     prettyprint (0.2.0)
     prism (1.4.0)
     propshaft (1.2.1)
