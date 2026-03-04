@@ -20,8 +20,15 @@ class Statement < ApplicationRecord
 
   validates :account_number, presence: true
   validates :branch_code, presence: true
-  validates :phone_number, presence: true
-  validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
+  validates :email,
+            presence: {
+              message: "No email linked to this account. Please visit the nearest bank."
+            },
+            format: {
+              with: URI::MailTo::EMAIL_REGEXP,
+              allow_blank: true,
+              message: "The email linked to your account is invalid. Please update it at the bank."
+            }
   validates :status, presence: true
   validates :file_path, length: { maximum: 255 }, allow_blank: true
 
