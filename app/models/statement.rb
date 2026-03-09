@@ -74,7 +74,7 @@ class Statement < ApplicationRecord
     return unless last.present?
 
     if last.created_at >= 1.day.ago
-      errors.add(:base, "You can only request one statement per day for this account.")
+      errors.add(:base, "You can request only one statement every 24 hours.")
     end
   end
 end
