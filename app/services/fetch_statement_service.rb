@@ -5,14 +5,16 @@ class FetchStatementService < ApplicationService
 
   def run
     connection = oracle_connection
-    row = fetch_row(connection)
+    rows = fetch_row(connection)
 
-    raise ExternalServiceError, "Statement not found for DCN #{dcn}" if row.nil?
+    raise ExternalServiceError, "Statement not found for DCN #{dcn}" if rows.empty?
 
-    message_clob = row['MESSAGE']
-    raise ExternalServiceError, "Empty statement message for DCN #{dcn}" if message_clob.nil?
+    combined_message = rows.map do |row|
+      row['MESSAGE']&.read.to_s
+    end.join
 
-    message_clob.read
+    combined_message
+
   rescue OCIError => e
     Rails.logger.error("[FetchStatementService] Oracle error: #{e.message}")
     raise ExternalServiceError, "Core database unavailable"
@@ -40,11 +42,18 @@ class FetchStatementService < ApplicationService
       SELECT *
       FROM MSTB_DLY_MSG_OUT
       WHERE DCN = :dcn
+      ORDER BY RUNNING_NO ASC
     SQL
 
     @cursor = connection.parse(query)
     @cursor.bind_param(':dcn', dcn.to_s)
     @cursor.exec
-    @cursor.fetch_hash
+
+    rows = []
+    while row = @cursor.fetch_hash
+      rows << row
+    end
+
+    rows
   end
 end
