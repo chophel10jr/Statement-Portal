@@ -87,7 +87,7 @@ class GenerateStatementJob < ApplicationJob
 
   def pdf_password(statement)
     account_part = statement.account_number.to_s.last(4)
-    email_part = statement.email.to_s.split("@").first.to_s.first(4).ljust(4, "x")
+    email_part = statement.email.to_s[0, 4].ljust(4, "x")
 
     "#{account_part}#{email_part}"
   end

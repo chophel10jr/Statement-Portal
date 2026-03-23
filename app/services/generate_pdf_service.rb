@@ -62,11 +62,13 @@ class GeneratePdfService < ApplicationService
         width: pdf.bounds.width,
         height: 100
       ) do
+        pdf.move_down 10
+
         pdf.image logo_path,
-                  width: 260,
+                  width: 200,
                   position: :center
 
-        pdf.move_up 10
+        pdf.move_down 10
 
         pdf.font(FONT_FAMILY, style: :bold) do
           pdf.text "ACCOUNT STATEMENT",
