@@ -61,8 +61,10 @@ class Statement < ApplicationRecord
   end
 
   def prevent_pending_statement_overlap
-    existing = Statement.pending_for_account(account_number)
-    existing = existing.where.not(id: id) if persisted?
+    existing = Statement
+      .pending_for_account(account_number)
+      .joins(:verification)
+      .where(verification: { verified: true })
 
     if existing.exists?
       errors.add(:base, "A statement is already being processed for this account. Please wait until it completes.")
@@ -70,11 +72,17 @@ class Statement < ApplicationRecord
   end
 
   def limit_one_request_per_day
-    last = Statement.latest_for_account(account_number)
-    return unless last.present?
+    last_verified = Statement
+      .by_account(account_number)
+      .joins(:verification)
+      .where(verification: { verified: true })
+      .order(created_at: :desc)
+      .first
 
-    if last.created_at >= 1.day.ago
-      errors.add(:base, "You can request only one statement every 24 hours.")
+    return unless last_verified.present?
+
+    if last_verified.created_at >= 1.day.ago
+      errors.add(:base, "You can request only one verified statement every 24 hours.")
     end
   end
 end
