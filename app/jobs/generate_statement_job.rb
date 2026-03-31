@@ -3,7 +3,6 @@
 class GenerateStatementJob < ApplicationJob
   queue_as :default
 
-  retry_on ExternalServiceError, wait: 10.seconds, attempts: 3
   discard_on ActiveRecord::RecordNotFound
 
   def perform(statement_id)
@@ -21,7 +20,9 @@ class GenerateStatementJob < ApplicationJob
     finalize_success!(statement, pdf_path, dcn)
   rescue ExternalServiceError, IOError => e
     log_error(statement_id, e)
-    fail_with(statement, e.message)
+
+    statement = Statement.find_by(id: statement_id)
+    fail_with(statement, e.message) if statement
   end
 
   private
