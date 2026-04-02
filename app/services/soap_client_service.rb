@@ -18,13 +18,16 @@ class SoapClientService < ApplicationService
       namespace_identifier: :fcub,
       env_namespace: :soapenv,
       convert_request_keys_to: :none,
-      adapter: :net_http
+      adapter: :net_http,
+
+      open_timeout: 10,
+      read_timeout: 300
     )
   end
 
   def run
     response = @client.call(:request_acc_stmt_io, message: build_message)
-    response.body
+    response&.body
   rescue Savon::SOAPFault => e
     handle_error("SOAP Fault", e)
   rescue Savon::Error => e
