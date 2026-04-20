@@ -3,6 +3,6 @@
 class OtpMailer < ApplicationMailer
   def send_otp(email, otp)
     @otp = otp
-    mail(to: email, subject: "Your OTP Code")
+    mail(to: email, subject: "OTP for Statement Request")
   end
 end
