@@ -6,7 +6,7 @@ export default class extends Controller {
   connect() {
     setTimeout(() => {
       this.hide();
-    }, 5000);
+    }, 10000);
   }
 
   hide() {

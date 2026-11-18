@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class Statement < ApplicationRecord
+  belongs_to :statement_request
   has_one :verification, dependent: :destroy
 
   enum :status, {
@@ -36,13 +37,17 @@ class Statement < ApplicationRecord
   validate :prevent_pending_statement_overlap, on: :create
   validate :limit_one_request_per_day, on: :create
 
-    def verified?
-      verification&.verified?
-    end
+  after_validation :notify_request_restriction,
+                 on: :create,
+                 if: :request_restricted?
 
-    def ready_for_generation?
-      pending? && verified?
-    end
+  def verified?
+    verification&.verified?
+  end
+
+  def ready_for_generation?
+    pending? && verified?
+  end
 
   private
 
@@ -67,22 +72,58 @@ class Statement < ApplicationRecord
       .where(verification: { verified: true })
 
     if existing.exists?
-      errors.add(:base, "A statement is already being processed for this account. Please wait until it completes.")
+      errors.add(
+        :base,
+        "A verified statement request is already being processed. Please wait until it completes."
+      )
     end
   end
 
   def limit_one_request_per_day
-    last_verified = Statement
+    @last_verified = Statement
       .by_account(account_number)
       .joins(:verification)
       .where(verification: { verified: true })
-      .order(created_at: :desc)
+      .latest_first
       .first
 
-    return unless last_verified.present?
+    return unless @last_verified
 
-    if last_verified.created_at >= 1.day.ago
-      errors.add(:base, "You can request only one verified statement every 24 hours.")
+    return if @last_verified.created_at < 24.hours.ago
+
+    errors.add(
+      :base,
+      "You can request only one verified statement every 24 hours."
+    )
+  end
+
+  def request_restricted?
+    errors[:base].any? do |error|
+      error.include?("already being processed") ||
+        error.include?("only one verified statement")
+    end
+  end
+
+  def notify_request_restriction
+    return unless email.present?
+
+    if errors[:base].any? { |e| e.include?("already being processed") }
+      StatementRequestMailer.pending_request(email).deliver_later
+
+    elsif errors[:base].any? { |e| e.include?("only one verified statement") }
+      remaining_seconds = (
+        @last_verified.created_at + 24.hours - Time.current
+      ).to_i
+
+      remaining_hours = remaining_seconds / 3600
+      remaining_minutes = (remaining_seconds % 3600) / 60
+
+      remaining_time = "#{remaining_hours} hours #{remaining_minutes} minutes"
+
+      StatementRequestMailer.request_limit_reached(
+        email,
+        remaining_time
+      ).deliver_later
     end
   end
 end

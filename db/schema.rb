@@ -10,9 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_20_044508) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_09_092632) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "statement_requests", force: :cascade do |t|
+    t.string "public_token", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expires_at"], name: "index_statement_requests_on_expires_at"
+    t.index ["public_token"], name: "index_statement_requests_on_public_token", unique: true
+  end
 
   create_table "statements", force: :cascade do |t|
     t.string "account_number"
@@ -26,6 +36,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_20_044508) do
     t.string "core_reference_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "statement_request_id"
+    t.index ["statement_request_id"], name: "index_statements_on_statement_request_id"
   end
 
   create_table "verifications", force: :cascade do |t|
@@ -37,8 +49,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_20_044508) do
     t.bigint "statement_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "statement_request_id"
     t.index ["statement_id"], name: "index_verifications_on_statement_id"
+    t.index ["statement_request_id"], name: "index_verifications_on_statement_request_id"
   end
 
+  add_foreign_key "statements", "statement_requests"
+  add_foreign_key "verifications", "statement_requests"
   add_foreign_key "verifications", "statements"
 end

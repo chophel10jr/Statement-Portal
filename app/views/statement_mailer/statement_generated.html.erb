@@ -9,7 +9,7 @@
 
     <p>
       Your bank statement for <strong><%= @statement.from_date %> to <%= @statement.to_date %></strong>
-      for account <strong><%= @statement.account_number %></strong> has been generated successfully.
+      for account <strong><%= @statement.account_number.to_s.gsub(/(?<=\A\d{4})\d{4}/, "XXXX") %></strong> has been generated successfully.
     </p>
 
     <p>

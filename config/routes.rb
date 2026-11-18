@@ -5,9 +5,9 @@ Rails.application.routes.draw do
 
   resources :verification, only: [] do
     collection do
-      get 'verify_otp/:id', to: 'verification#verify_otp_form', as: 'verify_otp'
-      post 'verify_otp/:id', to: 'verification#verify_otp'
-      post 'resend_otp/:id', to: 'verification#resend_otp', as: 'resend_otp'
+      get  :verify_otp_form
+      post :verify_otp
+      post :resend_otp
     end
   end
 end

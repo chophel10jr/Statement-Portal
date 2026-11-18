@@ -1,46 +1,76 @@
 # frozen_string_literal: true
 
 class VerificationController < ApplicationController
-  before_action :set_verification_and_statement
-  before_action :ensure_not_verified, only: %i[verify_otp_form verify_otp resend_otp]
+  before_action :set_statement_request
+  before_action :set_verification
+  before_action :ensure_request_active,
+                only: %i[verify_otp_form verify_otp resend_otp ]
 
   def verify_otp_form; end
 
   def verify_otp
+    unless @verification
+      return redirect_back_with_alert(
+        "OTP verification failed. Invalid, expired, or 3 attempts exceeded."
+      )
+    end
+
     result = @verification.verify(otp_param)
 
     if result[:success]
       GenerateStatementJob.perform_later(@statement.id)
-      redirect_with_notice("Your statement is being generated and will be shared soon.")
+
+      redirect_with_notice(
+        "Your statement is being generated and will be shared soon."
+      )
     else
-      redirect_back_with_alert(result[:error])
+      redirect_back_with_alert(
+        "OTP verification failed. Invalid, expired, or 3 attempts exceeded."
+      )
     end
   end
 
   def resend_otp
-    result = @verification.resend_otp
+    @verification&.resend_otp
 
-    flash[result[:success] ? :notice : :alert] =
-      result[:success] ? result[:message] : result[:error]
+    flash[:notice] =
+      "If eligible and within the 3-resend limit, an OTP will be sent to your email."
 
     redirect_back_to_verification
   end
 
   private
 
-  def set_verification_and_statement
-    @verification = Verification.find(params[:id])
-    @statement = @verification.statement
+  def set_statement_request
+    @statement_request =
+      StatementRequest.find_by(public_token: params[:token])
 
-    redirect_with_alert("Statement not found.") and return unless @statement
-  rescue ActiveRecord::RecordNotFound
-    redirect_with_alert("Verification not found.")
+    if @statement_request.nil? || @statement_request.expired?
+      redirect_to new_statement_path,
+                  alert: "Invalid or expired request. Please try again."
+    end
   end
 
-  def ensure_not_verified
-    return unless @verification.verified?
+  def set_verification
+    return if performed?
 
-    redirect_with_notice("This account has already been verified.")
+    @statement = @statement_request.statement
+    @verification = @statement_request.verification
+  end
+
+  def ensure_request_active
+    return if performed?
+
+    if @statement_request.expired?
+      redirect_to root_path,
+                  alert: "This request has expired. Please submit a new request."
+      return
+    end
+
+    if @statement_request.status == "completed" || @statement_request.status == "failed" || @verification&.verified?
+      redirect_to root_path,
+                  notice: "This request has already been verified."
+    end
   end
 
   def otp_param
@@ -48,7 +78,9 @@ class VerificationController < ApplicationController
   end
 
   def redirect_back_to_verification
-    redirect_to verify_otp_verification_index_path(id: @verification.id)
+    redirect_to verify_otp_form_verification_index_path(
+      token: @statement_request.public_token
+    )
   end
 
   def redirect_back_with_alert(message)

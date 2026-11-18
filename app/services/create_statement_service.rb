@@ -1,41 +1,47 @@
 # frozen_string_literal: true
 
 class CreateStatementService < ApplicationService
-  attr_accessor :statement_params
+  def initialize(statement_params)
+    @statement_params = statement_params.to_h.symbolize_keys
+  end
 
   def run
-    ActiveRecord::Base.transaction do
-      account_detail = fetch_account_detail!
-      statement      = create_statement!(account_detail)
-      create_verification!(statement)
+    account_detail = fetch_account_detail
+    return create_failed_request if account_detail.blank?
 
-      statement
+    ActiveRecord::Base.transaction do
+      statement_request = StatementRequest.create!(status: :otp_pending)
+      statement = create_statement!(statement_request, account_detail)
+      initiate_verification!(statement)
     end
   end
 
   private
 
-  def fetch_account_detail!
-    account_detail =
-      FetchAccountDetailService
-        .new(account_number: statement_params[:account_number])
-        .run
-    raise ExternalServiceError, "You don't have an account with BNB." unless account_detail.present?
+  attr_reader :statement_params
 
-    account_detail
+  def fetch_account_detail
+    FetchAccountDetailService
+      .new(account_number: statement_params[:account_number])
+      .run
   end
 
-  def create_statement!(account_detail)
-    Statement.create!(
-      @statement_params.merge(
-        branch_code:  account_detail["BRANCH_CODE"],
-        email:        account_detail["E_MAIL"],
-        phone_number: account_detail["MOBILE"]
+  def create_failed_request
+    StatementRequest.create!(status: :failed)
+  end
+
+  def create_statement!(request, account_detail)
+    request.create_statement!(
+      statement_params.merge(
+        branch_code: account_detail["BRANCH_CODE"],
+        email: account_detail["E_MAIL"],
+        phone_number: account_detail["MOBILE"],
+        status: :pending
       )
     )
   end
 
-  def create_verification!(statement)
+  def initiate_verification!(statement)
     verification = statement.create_verification!
     verification.generate_otp
   end

@@ -2,7 +2,7 @@ Dear Customer,
 
 We were unable to generate your account statement for
 <%= @statement.from_date %> to <%= @statement.to_date %>
-for account <%= @statement.account_number %>.
+for account <strong><%= @statement.account_number.to_s.gsub(/(?<=\A\d{4})\d{4}/, "XXXX") %></strong>.
 
 <% if @error.present? %>
 Reason: <%= @error %>

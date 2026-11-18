@@ -1,2 +1,21 @@
-<p>Your OTP is: <strong><%= @otp %></strong></p>
+<h2>Statement Request Verification</h2>
+
+<p>
+  Thank you for submitting your statement request.
+</p>
+
+<p>Your verification code is: <strong><%= @otp %></strong></p>
+
 <p>This code expires in 5 minutes.</p>
+
+<p>
+  Alternatively, you can access the verification page using the link below:
+</p>
+
+<p>
+  <%= link_to "Verify Statement Request", @verification_url %>
+</p>
+
+<p>If you did not submit this request, please ignore this email or please contact our support team (6070).</p>
+
+<p>Regards</p>

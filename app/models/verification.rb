@@ -1,3 +1,4 @@
+
 # frozen_string_literal: true
 
 class Verification < ApplicationRecord
@@ -9,65 +10,85 @@ class Verification < ApplicationRecord
 
   validates :statement_id, presence: true, uniqueness: true
 
-  after_commit :send_otp, on: [:create, :update], if: :saved_change_to_otp_code?
+  after_commit :send_otp, on: [:create, :update],
+                          if: :saved_change_to_otp_code?
 
   def generate_otp
+    return false unless request_active?
+    return false unless statement.pending?
+    return false if verified?
+
     self.otp_code = SecureRandom.random_number(1000..9999).to_s
     self.otp_sent_at = Time.current
     self.attempts = 0
-    self.verified = false
+
     save!
   end
 
   def send_otp
-    if statement.email.present?
-      OtpMailer.send_otp(statement.email, otp_code).deliver_later
-    elsif statement.phone_number.present?
-      message = "Your BNB statement request OTP is #{otp_code}. It expires in 5 minutes."
-      SmsService.new(number: statement.phone_number, message: message).run
-    end
+    return unless request_active?
+    return if verified?
+    return unless statement.email.present?
+
+    OtpMailer.send_otp(self).deliver_later
   end
 
   def resend_otp
-    return { success: false, error: "Maximum resend attempts (#{MAX_RESENDS}) reached" } unless can_resend_otp?
+    return { success: false } unless request_active?
+    return { success: false } unless can_resend_otp?
+    return { success: false } if verified?
 
-    generate_otp
+    return { success: false } unless generate_otp
+
     increment!(:otp_resend_count)
-    
-    { 
-      success: true,
-      message: "OTP has been resent",
-      remaining_resends: MAX_RESENDS - otp_resend_count
-    }
+
+    { success: true }
   end
 
   def verify(user_otp)
-    return { success: false, error: "OTP expired", retry: false } if expired?
-    return { success: false, error: "Too many attempts. Please request a new OTP.", retry: false } if attempts >= MAX_ATTEMPTS
+    return { success: false } unless request_active?
+    return { success: false } unless statement.pending?
+    return { success: false } if verified?
+    return { success: false } if expired?
+    return { success: false } if attempts >= MAX_ATTEMPTS
 
     increment!(:attempts)
 
-    if otp_code == user_otp
-      update!(verified: true)
-      { success: true }
+    if ActiveSupport::SecurityUtils.secure_compare(
+      otp_code.to_s,
+      user_otp.to_s
+    )
+      complete_verification
     else
-      remaining_attempts = MAX_ATTEMPTS - attempts
-      { 
-        success: false,
-        error: "Invalid OTP. Please try again.",
-        retry: true,
-        remaining_attempts: remaining_attempts
-      }
+      { success: false }
     end
   end
 
   private
-  
+
+  def request_active?
+    request = statement&.statement_request
+
+    request.present? && !request.expired?
+  end
+
+  def complete_verification
+    statement_request = statement.statement_request
+
+    transaction do
+      update!(verified: true)
+      statement_request.update!(status: "completed")
+    end
+
+    { success: true }
+  end
+
   def can_resend_otp?
-    otp_resend_count <= MAX_RESENDS
+    otp_resend_count < MAX_RESENDS
   end
 
   def expired?
-    otp_sent_at.nil? || otp_sent_at < OTP_EXPIRY_MINUTES.minutes.ago
+    otp_sent_at.nil? ||
+      otp_sent_at < OTP_EXPIRY_MINUTES.minutes.ago
   end
 end

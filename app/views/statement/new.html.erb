@@ -10,6 +10,17 @@
     <div class="rounded-[22px] bg-white lg:bg-[#F6F6F6]">
       <div class="lg:flex" data-controller="statement">
         <div class="flex-1 px-[16px] py-[16px] lg:py-[32px] lg:px-[32px] overflow-y-auto">
+          <div class="mb-[24px] flex items-start gap-3 rounded-lg bg-blue-50 border border-blue-100 px-4 py-3.5" role="note" aria-label="Please note">
+            <i class="material-symbols-outlined text-[#252D60] !text-[20px] mt-0.5 shrink-0" aria-hidden="true">info</i>
+            <div class="text-sm text-gray-600 leading-relaxed">
+              <p class="font-semibold text-[#252D60] mb-1">
+                Information
+              </p>
+              <p>
+                If your details are valid and eligible, a verification code and link will be sent to your registered email address. Please note that statement requests are limited to <span class="font-medium text-gray-800">once every 24 hours</span>.
+              </p>
+            </div>
+          </div>
           <%= form_with model: Statement.new, url: statement_index_path, method: :post, local: true do |f| %>
             <div>
               <p class="mb-[8px]">Account Number <span class="text-bnb_red">*</span> </p>
