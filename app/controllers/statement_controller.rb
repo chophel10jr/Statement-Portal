@@ -1,6 +1,29 @@
 # frozen_string_literal: true
 
 class StatementController < ApplicationController
+  include RateLimitable
+
+  rate_limit to: 10,
+            within: 1.minute,
+            name: "statement_create_by_ip",
+            by: -> { request.remote_ip },
+            only: :create,
+            with: -> { handle_rate_limit(redirect_path: new_statement_path, retry_after: 60) }
+
+  rate_limit to: 3,
+            within: 10.minutes,
+            name: "statement_create_by_account",
+            by: -> { params.dig(:statement, :account_number).to_s.strip.presence || request.remote_ip },
+            only: :create,
+            with: -> { redirect_to root_path, notice: GENERIC_NOTICE }
+
+  rate_limit to: 10,
+             within: 1.minute,
+             name: "statement_show_by_ip",
+             by: -> { request.remote_ip },
+             only: :show,
+             with: -> { handle_rate_limit(retry_after: 60) }
+
   rescue_from ActiveRecord::RecordInvalid, ArgumentError,
               with: :handle_invalid_request
   rescue_from ExternalServiceError,

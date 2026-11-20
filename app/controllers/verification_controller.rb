@@ -1,10 +1,33 @@
 # frozen_string_literal: true
 
 class VerificationController < ApplicationController
+  include RateLimitable
+
+  rate_limit to: 15,
+            within: 1.minute,
+            name: "verification_by_ip",
+            by: -> { request.remote_ip },
+            only: %i[verify_otp resend_otp],
+            with: -> { handle_rate_limit(redirect_path: root_path, retry_after: 60) }
+
+  rate_limit to: 5,
+            within: 5.minutes,
+            name: "verification_verify_by_token",
+            by: -> { params[:token].to_s.strip.presence || request.remote_ip },
+            only: :verify_otp,
+            with: -> { handle_rate_limit(redirect_path: root_path, message: "Too many verification attempts. Please request a new statement.", retry_after: 300) }
+
+  rate_limit to: 3,
+            within: 5.minutes,
+            name: "verification_resend_by_token",
+            by: -> { params[:token].to_s.strip.presence || request.remote_ip },
+            only: :resend_otp,
+            with: -> { handle_rate_limit(redirect_path: verify_otp_form_verification_index_path(token: params[:token]), message: "Please wait before requesting another OTP.", retry_after: 60) }
+
   before_action :set_statement_request
   before_action :set_verification
   before_action :ensure_request_active,
-                only: %i[verify_otp_form verify_otp resend_otp ]
+                only: %i[verify_otp_form verify_otp resend_otp]
 
   def verify_otp_form; end
 
